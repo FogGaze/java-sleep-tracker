@@ -2,6 +2,7 @@ package ru.yandex.practicum.sleeptracker;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.sleeptracker.analyzer.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,7 +13,14 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SleepTrackerAppTest {
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yy HH:mm");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yy HH:mm");
+    private final SessionsCountAnalyzer sessionCA = new SessionsCountAnalyzer();
+    private final MinDurationAnalyzer minDA = new MinDurationAnalyzer();
+    private final MaxDurationAnalyzer maxDA = new MaxDurationAnalyzer();
+    private final AverageDurationAnalyzer averageDA = new AverageDurationAnalyzer();
+    private final BadSessionsAnalyzer badSA = new BadSessionsAnalyzer();
+    private final SleeplessNightsAnalyzer sleepLNA = new SleeplessNightsAnalyzer();
+    private final ChronotypeAnalyzer chronotypeA = new ChronotypeAnalyzer();
 
     @Test
     @DisplayName("Проверка чтения строки")
@@ -50,7 +58,7 @@ public class SleepTrackerAppTest {
             sessions.add(new SleepingSession(start, end, SleepQuality.GOOD));
         }
 
-        SleepAnalysisResult result = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = sessionCA.apply(sessions);
         assertEquals(10, result.getValue());
         assertEquals("Общее количество сессий сна", result.getDescription());
     }
@@ -60,7 +68,7 @@ public class SleepTrackerAppTest {
     void testSessionsSizeWithZeroSessions() {
         List<SleepingSession> sessions = new ArrayList<>();
 
-        SleepAnalysisResult result = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = sessionCA.apply(sessions);
         assertEquals(0, result.getValue());
         assertEquals("Общее количество сессий сна", result.getDescription());
     }
@@ -76,7 +84,7 @@ public class SleepTrackerAppTest {
             sessions.add(new SleepingSession(start, end, SleepQuality.NORMAL));
         }
 
-        SleepAnalysisResult result = SleepTrackerApp.findMinSession().apply(sessions);
+        SleepAnalysisResult result = minDA.apply(sessions);
         assertEquals(180L, result.getValue());
         assertEquals("Минимальная продолжительность сессии сна в минутах", result.getDescription());
     }
@@ -88,7 +96,7 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("01.02.26 00:00", formatter),
                 LocalDateTime.parse("01.02.26 10:00", formatter), SleepQuality.NORMAL));
 
-        SleepAnalysisResult result = SleepTrackerApp.findMinSession().apply(sessions);
+        SleepAnalysisResult result = minDA.apply(sessions);
         assertEquals(600L, result.getValue());
         assertEquals("Минимальная продолжительность сессии сна в минутах", result.getDescription());
     }
@@ -98,7 +106,7 @@ public class SleepTrackerAppTest {
     void testFindMinSessionWithZeroSessions() {
         List<SleepingSession> sessions = new ArrayList<>();
 
-        SleepAnalysisResult result = SleepTrackerApp.findMinSession().apply(sessions);
+        SleepAnalysisResult result = minDA.apply(sessions);
         assertEquals(0L, result.getValue());
         assertEquals("Минимальная продолжительность сессии сна в минутах", result.getDescription());
     }
@@ -114,7 +122,7 @@ public class SleepTrackerAppTest {
             sessions.add(new SleepingSession(start, end, SleepQuality.NORMAL));
         }
 
-        SleepAnalysisResult result = SleepTrackerApp.findMaxSession().apply(sessions);
+        SleepAnalysisResult result = maxDA.apply(sessions);
         assertEquals(720L, result.getValue());
         assertEquals("Максимальная продолжительность сессии сна в минутах", result.getDescription());
     }
@@ -126,7 +134,7 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("01.02.26 00:00", formatter),
                 LocalDateTime.parse("01.02.26 10:00", formatter), SleepQuality.NORMAL));
 
-        SleepAnalysisResult result = SleepTrackerApp.findMaxSession().apply(sessions);
+        SleepAnalysisResult result = maxDA.apply(sessions);
         assertEquals(600L, result.getValue());
         assertEquals("Максимальная продолжительность сессии сна в минутах", result.getDescription());
     }
@@ -136,7 +144,7 @@ public class SleepTrackerAppTest {
     void testFindMaxSessionWithZeroSessions() {
         List<SleepingSession> sessions = new ArrayList<>();
 
-        SleepAnalysisResult result = SleepTrackerApp.findMaxSession().apply(sessions);
+        SleepAnalysisResult result = maxDA.apply(sessions);
         assertEquals(0L, result.getValue());
         assertEquals("Максимальная продолжительность сессии сна в минутах", result.getDescription());
     }
@@ -152,7 +160,7 @@ public class SleepTrackerAppTest {
             sessions.add(new SleepingSession(start, end, SleepQuality.NORMAL));
         }
 
-        SleepAnalysisResult result = SleepTrackerApp.findAverageSession().apply(sessions);
+        SleepAnalysisResult result = averageDA.apply(sessions);
         assertEquals(450L, result.getValue());
         assertEquals("Средняя продолжительность сессии сна в минутах", result.getDescription());
     }
@@ -164,7 +172,7 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("01.02.26 00:00", formatter),
                 LocalDateTime.parse("01.02.26 10:00", formatter), SleepQuality.NORMAL));
 
-        SleepAnalysisResult result = SleepTrackerApp.findAverageSession().apply(sessions);
+        SleepAnalysisResult result = averageDA.apply(sessions);
         assertEquals(600L, result.getValue());
         assertEquals("Средняя продолжительность сессии сна в минутах", result.getDescription());
     }
@@ -174,7 +182,7 @@ public class SleepTrackerAppTest {
     void testFindAverageSessionWithZeroSessions() {
         List<SleepingSession> sessions = new ArrayList<>();
 
-        SleepAnalysisResult result = SleepTrackerApp.findAverageSession().apply(sessions);
+        SleepAnalysisResult result = averageDA.apply(sessions);
         assertEquals(0L, result.getValue());
         assertEquals("Средняя продолжительность сессии сна в минутах", result.getDescription());
     }
@@ -194,8 +202,8 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("11.02.26 22:00", formatter),
                 LocalDateTime.parse("12.02.26 12:00", formatter), SleepQuality.GOOD));
 
-        SleepAnalysisResult result = SleepTrackerApp.findBadNights().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = badSA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals(10L, result.getValue());
         assertEquals(12, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -211,8 +219,8 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("11.02.26 22:00", formatter),
                 LocalDateTime.parse("12.02.26 12:00", formatter), SleepQuality.GOOD));
 
-        SleepAnalysisResult result = SleepTrackerApp.findBadNights().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = badSA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals(0L, result.getValue());
         assertEquals(2, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -224,8 +232,8 @@ public class SleepTrackerAppTest {
     void testFindBadSessionWithZeroSessions() {
         List<SleepingSession> sessions = new ArrayList<>();
 
-        SleepAnalysisResult result = SleepTrackerApp.findBadNights().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = badSA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals(0L, result.getValue());
         assertEquals(0, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -247,8 +255,8 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("11.02.26 22:00", formatter),
                 LocalDateTime.parse("12.02.26 12:00", formatter), SleepQuality.GOOD));
 
-        SleepAnalysisResult result = SleepTrackerApp.findLessSleepNights().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = sleepLNA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals(5L, result.getValue());
         assertEquals(12, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -264,8 +272,8 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("11.02.26 22:00", formatter),
                 LocalDateTime.parse("12.02.26 12:00", formatter), SleepQuality.GOOD));
 
-        SleepAnalysisResult result = SleepTrackerApp.findLessSleepNights().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = sleepLNA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals(0L, result.getValue());
         assertEquals(2, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -277,8 +285,8 @@ public class SleepTrackerAppTest {
     void testFindLessSleepSessionsWithZeroSessions() {
         List<SleepingSession> sessions = new ArrayList<>();
 
-        SleepAnalysisResult result = SleepTrackerApp.findLessSleepNights().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = sleepLNA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals(0L, result.getValue());
         assertEquals(0, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -296,8 +304,8 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("02.02.26 23:00", formatter),
                 LocalDateTime.parse("03.02.26 07:00", formatter), SleepQuality.GOOD));
 
-        SleepAnalysisResult result = SleepTrackerApp.findLessSleepNights().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = sleepLNA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals(0L, result.getValue());
         assertEquals(3, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -319,8 +327,8 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("12.02.26 22:00", formatter),
                 LocalDateTime.parse("13.02.26 12:00", formatter), SleepQuality.GOOD));
 
-        SleepAnalysisResult result = SleepTrackerApp.findChronotype().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = chronotypeA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals("PIGEON", result.getValue());
         assertEquals(12, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -341,8 +349,8 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("12.02.26 22:00", formatter),
                 LocalDateTime.parse("13.02.26 12:00", formatter), SleepQuality.GOOD));
 
-        SleepAnalysisResult result = SleepTrackerApp.findChronotype().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = chronotypeA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals("OWL", result.getValue());
         assertEquals(12, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -363,8 +371,8 @@ public class SleepTrackerAppTest {
         sessions.add(new SleepingSession(LocalDateTime.parse("12.02.26 22:00", formatter),
                 LocalDateTime.parse("13.02.26 12:00", formatter), SleepQuality.GOOD));
 
-        SleepAnalysisResult result = SleepTrackerApp.findChronotype().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = chronotypeA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals("LARK", result.getValue());
         assertEquals(12, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
@@ -376,8 +384,8 @@ public class SleepTrackerAppTest {
     void testFindChronotypeWithZeroSessions() {
         List<SleepingSession> sessions = new ArrayList<>();
 
-        SleepAnalysisResult result = SleepTrackerApp.findChronotype().apply(sessions);
-        SleepAnalysisResult resultSize = SleepTrackerApp.findSessionsSize().apply(sessions);
+        SleepAnalysisResult result = chronotypeA.apply(sessions);
+        SleepAnalysisResult resultSize = sessionCA.apply(sessions);
         assertEquals("не определен", result.getValue());
         assertEquals(0, resultSize.getValue());
         assertEquals("Общее количество сессий сна", resultSize.getDescription());
